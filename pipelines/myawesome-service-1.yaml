@@ -8,5 +8,3 @@ pipelines:
         git: git@github.com:praks-1529/myawesome.git
         branch: develop
    stages:
-    - build:
-        clean_workspace: true
