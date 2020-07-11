@@ -7,3 +7,18 @@ pipelines:
       mygit:
         git: git@github.com:praks-1529/myawesome.git
         branch: develop
+   stages
+   - build_and_push_image:
+        clean_workspace: true
+        fetch_materials: true
+        keep_artifacts: false
+        jobs:
+          build:
+            elastic_profile_id: myawesome-java-8
+            artifacts:
+            tasks:
+            - exec:
+                command: bash
+                arguments:
+                - "-c"
+                - "mvn clean package"
