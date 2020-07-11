@@ -1,0 +1,9 @@
+format_version: 3
+
+pipelines:
+  myawesome-service-build-dev:
+    group: TEAMNAME
+    materials:
+      mygit:
+        git: git@github.com:praks-1529/myawesome.git
+        branch: develop
