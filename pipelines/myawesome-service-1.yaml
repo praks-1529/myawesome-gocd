@@ -7,4 +7,3 @@ pipelines:
       mygit:
         git: git@github.com:praks-1529/myawesome.git
         branch: develop
-   stages:
