@@ -7,7 +7,7 @@ pipelines:
       mygit:
         git: git@github.com:praks-1529/myawesome.git
         branch: develop
-   stages
+   stages:
    - build_and_push_image:
         clean_workspace: true
         fetch_materials: true
