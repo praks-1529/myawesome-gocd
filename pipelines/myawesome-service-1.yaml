@@ -7,15 +7,18 @@ pipelines:
       mygit:
         git: git@github.com:praks-1529/myawesome.git
         branch: develop
-   stages:
-   - build_and_push_image:
+    environment_variables:
+      DOCKER_REGISTRY: 479580041174.dkr.ecr.ap-southeast-1.amazonaws.com
+      IMAGE_NAME: myawesome-service-1
+    stages:
+    - build:
         clean_workspace: true
-        fetch_materials: true
-        keep_artifacts: false
         jobs:
           build:
             elastic_profile_id: myawesome-java-8
             artifacts:
+            - build:
+                source: image_ref
             tasks:
             - exec:
                 command: bash
