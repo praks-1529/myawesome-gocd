@@ -1,0 +1,52 @@
+format_version: 3
+
+pipelines:
+  myawesome-service-build-dev:
+    group: TEAMNAME
+    materials:
+      mygit:
+        git: git@github.com:praks-1529/myawesome.git
+        branch: develop
+    environment_variables:
+      DOCKER_REGISTRY: 479580041174.dkr.ecr.ap-southeast-1.amazonaws.com/myawesome
+      IMAGE_NAME: team_name-myawesome
+    stages:
+    - build:
+        clean_workspace: true
+        jobs:
+          build:
+            elastic_profile_id: prod-java-8
+            artifacts:
+            - build:
+                source: image_ref
+            tasks:
+            - exec:
+                command: bash
+                arguments:
+                - "-c"
+                - "mvn clean package -Dspring.profiles.active=docker"
+            - exec:
+                command: bash
+                arguments:
+                - "-c"
+                - "mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec > version.txt"
+            - exec:
+                command: bash
+                arguments:
+                - "-c"
+                - "echo ${DOCKER_REGISTRY}/${IMAGE_NAME}-dev:v`git rev-list HEAD --count`.0 > image_ref"
+            - exec:
+                command: bash
+                arguments:
+                - "-c"
+                - "eval $(aws ecr get-login --no-include-email --region apse-1) && docker build --build-arg version=`cat version.txt` -t `cat image_ref` ."
+            - exec:
+                command: bash
+                arguments:
+                - "-c"
+                - "docker push `cat image_ref`"
+            - exec:
+                command: bash
+                arguments:
+                - "-c"
+                - "cat image_ref"
