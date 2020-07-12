@@ -7,6 +7,6 @@ metadata:
 spec:
   containers:
     - name: gocd-agent-container-myawesome-java-8
-      image: myawesome-java-8:1.0
+      image: 479580041174.dkr.ecr.ap-south-1.amazonaws.com/myawesome-java-8:1.1
       securityContext:
         privileged: true
