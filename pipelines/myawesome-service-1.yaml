@@ -25,3 +25,33 @@ pipelines:
                 arguments:
                 - "-c"
                 - "mvn clean package"
+            - exec:
+                command: bash
+                arguments:
+                - "-c"
+                - "mvn clean package -Dspring.profiles.active=docker"
+            - exec:
+                command: bash
+                arguments:
+                - "-c"
+                - "mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec > version.txt"
+            - exec:
+                command: bash
+                arguments:
+                - "-c"
+                - "echo ${DOCKER_REGISTRY}/${IMAGE_NAME}-dev:v`git rev-list HEAD --count`.0 > image_ref"
+            - exec:
+                command: bash
+                arguments:
+                - "-c"
+                - "eval $(aws ecr get-login --no-include-email --region ap-south-1) && docker build --build-arg version=`cat version.txt` -t `cat image_ref` ."
+            - exec:
+                command: bash
+                arguments:
+                - "-c"
+                - "docker push `cat image_ref`"
+            - exec:
+                command: bash
+                arguments:
+                - "-c"
+                - "cat image_ref"
