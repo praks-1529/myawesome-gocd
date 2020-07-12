@@ -5,7 +5,7 @@ pipelines:
     group: TEAMNAME
     materials:
       mygit:
-        git: git@github.com:praks-1529/myawesome.git
+        git: https://github.com/praks-1529/myawesome.git
         branch: develop
     environment_variables:
       DOCKER_REGISTRY: 479580041174.dkr.ecr.ap-southeast-1.amazonaws.com
