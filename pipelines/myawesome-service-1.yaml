@@ -49,7 +49,7 @@ pipelines:
                 command: bash
                 arguments:
                 - "-c"
-                - "docker push `cat image_ref`"
+                - "eval $(aws ecr get-login --no-include-email --region us-east-1) && docker push `cat image_ref`"
             - exec:
                 command: bash
                 arguments:
