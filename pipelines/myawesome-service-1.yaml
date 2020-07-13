@@ -39,7 +39,7 @@ pipelines:
                 command: bash
                 arguments:
                 - "-c"
-                - "echo ${DOCKER_REGISTRY}/${IMAGE_NAME}-dev:v`git rev-list HEAD --count`.0 > image_ref"
+                - "echo ${DOCKER_REGISTRY}/${IMAGE_NAME}:v`git rev-list HEAD --count`.0 > image_ref"
             - exec:
                 command: bash
                 arguments:
