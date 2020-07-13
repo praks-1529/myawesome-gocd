@@ -8,7 +8,7 @@ pipelines:
         git: https://github.com/praks-1529/myawesome.git
         branch: develop
     environment_variables:
-      DOCKER_REGISTRY: 479580041174.dkr.ecr.ap-southeast-1.amazonaws.com
+      DOCKER_REGISTRY: 479580041174.dkr.ecr.ap-south-1.amazonaws.com
       IMAGE_NAME: myawesome-service-1
     stages:
     - build:
