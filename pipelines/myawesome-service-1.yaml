@@ -69,7 +69,7 @@ pipelines:
       upstream_build_pipeline: "myawesome-service-1-build-dev"
     materials:
       upstream:
-        pipeline: myawesome-service-build-dev
+        pipeline: myawesome-service-1-build-dev
         stage: build
       mygit:
         git: https://github.com/praks-1529/myawesome.git
@@ -97,7 +97,7 @@ pipelines:
                       arguments:
                         - "-c"
                         - "AWS_PROFILE=#{aws_profile} ./tf_plan.sh > tf_plan_output.txt"
-                        
+
       - terraform-apply: &terraform-apply
           clean_workspace: true
           jobs:
