@@ -48,7 +48,7 @@ pipelines:
             - exec:
                 command: bash
                 arguments:
-                - "-c"
+                - "-c"      
                 - "eval $(aws ecr get-login --no-include-email --region us-east-1) && docker push `cat image_ref`"
             - exec:
                 command: bash
@@ -65,7 +65,7 @@ pipelines:
       component_name: myawesome-service-1
       manifest_file: deployment-manifest.json
       env: dev
-      prod_market: in
+      product_market: in
       upstream_build_pipeline: "myawesome-service-1-build-dev"
     materials:
       upstream:
@@ -88,7 +88,7 @@ pipelines:
                   REGION: "#{region}"
                   COMPONENT_NAME: "#{component_name}"
                   ENV: "#{env}"
-                  PROD_MARKET: "#{prod_market}"
+                  PRODUCT_MARKET: "#{product_market}"
                   TF_EXE: "terraform"
                 tasks:
                   - exec:
@@ -111,7 +111,7 @@ pipelines:
                   REGION: "#{region}"
                   COMPONENT_NAME: "#{component_name}"
                   ENV: "#{env}"
-                  PROD_MARKET: "#{prod_market}"
+                  PRODUCT_MARKET: "#{product_market}"
                   TF_EXE: "terraform"
                 tasks:
                   - exec:
