@@ -1,7 +1,7 @@
 format_version: 3
 
 pipelines:
-  myawesome-service-build-dev:
+  myawesome-service-1-build-dev:
     group: TEAMNAME
     materials:
       mygit:
@@ -55,3 +55,74 @@ pipelines:
                 arguments:
                 - "-c"
                 - "cat image_ref"
+
+  myawesome-service-1-in-dev-aps1:
+    group: TEAMNAME
+    parameters:
+      aws_profile: dev
+      region_short: aps1
+      region: ap-south-1
+      component_name: myawesome-service-1
+      manifest_file: deployment-manifest.json
+      env: dev
+      prod_market: in
+      upstream_build_pipeline: "myawesome-service-1-build-dev"
+    materials:
+      upstream:
+        pipeline: myawesome-service-build-dev
+        stage: build
+      mygit:
+        git: https://github.com/praks-1529/myawesome.git
+        branch: develop
+    stages:
+      - terraform-plan: &terraform-plan
+          clean_workspace: true
+          jobs:
+              deploy:
+                elastic_profile_id: "terraform-#{env}"
+                artifacts:
+                - build:
+                    source: terraform/tf_plan_output.txt
+                environment_variables:
+                  AWS_PROFILE: "#{aws_profile}"
+                  REGION: "#{region}"
+                  COMPONENT_NAME: "#{component_name}"
+                  ENV: "#{env}"
+                  PROD_MARKET: "#{prod_market}"
+                  TF_EXE: "terraform"
+                tasks:
+                  - exec:
+                      command: bash
+                      working_directory: terraform
+                      arguments:
+                        - "-c"
+                        - "AWS_PROFILE=#{aws_profile} ./tf_plan.sh > tf_plan_output.txt"
+                        
+      - terraform-apply: &terraform-apply
+          clean_workspace: true
+          jobs:
+              deploy:
+                elastic_profile_id: "terraform-#{env}"
+                artifacts:
+                - build:
+                    source: terraform/env.sh
+                environment_variables:
+                  AWS_PROFILE: "#{aws_profile}"
+                  REGION: "#{region}"
+                  COMPONENT_NAME: "#{component_name}"
+                  ENV: "#{env}"
+                  PROD_MARKET: "#{prod_market}"
+                  TF_EXE: "terraform"
+                tasks:
+                  - exec:
+                      command: bash
+                      working_directory: terraform
+                      arguments:
+                        - "-c"
+                        - "AWS_PROFILE=#{aws_profile} ./tf_apply.sh"
+                  - exec:
+                      command: bash
+                      working_directory: terraform
+                      arguments:
+                        - "-c"
+                        - "./tf_gen_env.sh > env.sh"
