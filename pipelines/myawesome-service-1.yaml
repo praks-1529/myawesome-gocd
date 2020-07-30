@@ -56,6 +56,61 @@ pipelines:
                 - "-c"
                 - "cat image_ref"
 
+    myawesome-service-1-build-qa:
+    group: TEAMNAME
+    materials:
+      mygit:
+        git: https://github.com/praks-1529/myawesome.git
+        branch: verify
+    environment_variables:
+      DOCKER_REGISTRY: 479580041174.dkr.ecr.ap-south-1.amazonaws.com
+      IMAGE_NAME: myawesome-service-1
+    stages:
+    - build:
+        clean_workspace: true
+        jobs:
+          build:
+            elastic_profile_id: myawesome-java-8
+            artifacts:
+            - build:
+                source: image_ref
+            tasks:
+            - exec:
+                command: bash
+                arguments:
+                - "-c"
+                - "mvn clean package"
+            - exec:
+                command: bash
+                arguments:
+                - "-c"
+                - "mvn clean package -Dspring.profiles.active=docker"
+            - exec:
+                command: bash
+                arguments:
+                - "-c"
+                - "mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec > version.txt"
+            - exec:
+                command: bash
+                arguments:
+                - "-c"
+                - "echo ${DOCKER_REGISTRY}/${IMAGE_NAME}:v`git rev-list HEAD --count`.0 > image_ref"
+            - exec:
+                command: bash
+                arguments:
+                - "-c"
+                - "eval $(aws ecr get-login --no-include-email --region ap-south-1) && docker build --build-arg version=`cat version.txt` -t `cat image_ref` ."
+            - exec:
+                command: bash
+                arguments:
+                - "-c"      
+                - "eval $(aws ecr get-login --no-include-email --region us-east-1) && docker push `cat image_ref`"
+            - exec:
+                command: bash
+                arguments:
+                - "-c"
+                - "cat image_ref"
+
   myawesome-service-1-in-dev-aps1:
     group: TEAMNAME
     parameters:
@@ -74,6 +129,7 @@ pipelines:
       mygit:
         git: https://github.com/praks-1529/myawesome.git
         branch: develop
+
     stages:
       - terraform-plan: &terraform-plan
           clean_workspace: true
@@ -126,3 +182,25 @@ pipelines:
                       arguments:
                         - "-c"
                         - "./tf_gen_env.sh > env.sh"
+
+  myawesome-service-1-in-qa-aps1:
+    group: TEAMNAME
+    parameters:
+      aws_profile: qa
+      region_short: aps1
+      region: ap-south-1
+      component_name: myawesome-service-1
+      manifest_file: deployment-manifest.json
+      env: qa
+      product_market: in
+      upstream_build_pipeline: "myawesome-service-1-build-qa"
+    materials:
+      upstream:
+        pipeline: myawesome-service-1-build-qa
+        stage: build
+      mygit:
+        git: https://github.com/praks-1529/myawesome.git
+        branch: verify
+    stages:
+      - terraform-plan: *terraform-plan
+      - terraform-apply: *terraform-apply
