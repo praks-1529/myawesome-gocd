@@ -56,7 +56,7 @@ pipelines:
                 - "-c"
                 - "cat image_ref"
 
-    myawesome-service-1-build-qa:
+  myawesome-service-1-build-qa:
     group: TEAMNAME
     materials:
       mygit:
