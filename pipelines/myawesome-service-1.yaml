@@ -94,7 +94,7 @@ pipelines:
                 command: bash
                 arguments:
                 - "-c"
-                - "echo ${DOCKER_REGISTRY}/${IMAGE_NAME}:v`git rev-list HEAD --count`.0 > image_ref"
+                - "echo ${DOCKER_REGISTRY}/${IMAGE_NAME}-qa:v`git rev-list HEAD --count`.0 > image_ref"
             - exec:
                 command: bash
                 arguments:
@@ -118,10 +118,10 @@ pipelines:
       region_short: aps1
       region: ap-south-1
       component_name: myawesome-service-1
-      manifest_file: deployment-manifest.json
       env: dev
       product_market: in
       upstream_build_pipeline: "myawesome-service-1-build-dev"
+      team_name: "myawesome-team-name"
     materials:
       upstream:
         pipeline: myawesome-service-1-build-dev
@@ -146,6 +146,7 @@ pipelines:
                   ENV: "#{env}"
                   PRODUCT_MARKET: "#{product_market}"
                   TF_EXE: "terraform"
+                  TEAM_NAME: "#{team_name}"
                 tasks:
                   - exec:
                       command: bash
@@ -169,6 +170,7 @@ pipelines:
                   ENV: "#{env}"
                   PRODUCT_MARKET: "#{product_market}"
                   TF_EXE: "terraform"
+                  TEAM_NAME: "#{team_name}"
                 tasks:
                   - exec:
                       command: bash
@@ -183,6 +185,89 @@ pipelines:
                         - "-c"
                         - "./tf_gen_env.sh > env.sh"
 
+      - kube-deploy: &kube-deploy
+          clean_workspace: true
+          jobs:
+              deploy:
+                elastic_profile_id: "kube-#{env}"
+                artifacts:
+                - build:
+                    source: k8s/deployment-manifest.json
+                - build:
+                    source: k8s/namespace-manifest.json
+                - build:
+                    source: k8s/service-manifest.json
+                environment_variables:
+                  AWS_PROFILE: "#{aws_profile}"
+                  REGION: "#{region}"
+                  COMPONENT_NAME: "#{component_name}"
+                  ENV: "#{env}"
+                  PRODUCT_MARKET: "#{product_market}"
+                  TEAM_NAME: "#{team_name}"
+                tasks:
+                  - fetch:
+                      pipeline: "#{upstream_build_pipeline}"
+                      stage: build
+                      job: build
+                      is_file: yes
+                      source: image_ref
+                  - fetch:
+                      pipeline: "#{component_name}-#{product_market}-#{env}-#{region_short}"
+                      stage: terraform-apply
+                      job: deploy
+                      is_file: yes
+                      source: env.sh
+                  - exec:
+                      command: bash
+                      arguments:
+                        - "-c"
+                        - "cat image_ref"
+                  - exec:
+                      command: bash
+                      working_directory: k8s
+                      arguments:
+                        - "-c"
+                        - "export AWS_PROFILE=#{aws_profile} && \
+                           export REGION=#{region} && \
+                           export COMPONENT_NAME=#{component_name} && \
+                           export PRODUCT_MARKET=#{product_market} && \
+                           export IMAGE=`cat ../image_ref` && \
+                           export ENV=#{env} && \
+                           export REPLICA=2 && \
+                           export TEAM_NAME=#{team_name} && \
+                           source ../env.sh && \
+                           ./deploy_kube namespace-manifest.jsonnet namespace-manifest.json --deploy"
+                  - exec:
+                      command: bash
+                      working_directory: k8s
+                      arguments:
+                        - "-c"
+                        - "export AWS_PROFILE=#{aws_profile} && \
+                           export REGION=#{region} && \
+                           export COMPONENT_NAME=#{component_name} && \
+                           export PRODUCT_MARKET=#{product_market} && \
+                           export IMAGE=`cat ../image_ref` && \
+                           export ENV=#{env} && \
+                           export REPLICA=2 && \
+                           export TEAM_NAME=#{team_name} && \
+                           source ../env.sh && \
+                           ./deploy_kube deployment-manifest.jsonnet deployment-manifest.json --deploy"
+                  - exec:
+                      command: bash
+                      working_directory: k8s
+                      arguments:
+                        - "-c"
+                        - "export AWS_PROFILE=#{aws_profile} && \
+                           export REGION=#{region} && \
+                           export COMPONENT_NAME=#{component_name} && \
+                           export PRODUCT_MARKET=#{product_market} && \
+                           export IMAGE=`cat ../image_ref` && \
+                           export ENV=#{env} && \
+                           export REPLICA=2 && \
+                           export TEAM_NAME=#{team_name} && \
+                           source ../env.sh && \
+                           ./deploy_kube service-manifest.jsonnet service-manifest.json --deploy"
+
   myawesome-service-1-in-qa-aps1:
     group: TEAMNAME
     parameters:
@@ -194,6 +279,7 @@ pipelines:
       env: qa
       product_market: in
       upstream_build_pipeline: "myawesome-service-1-build-qa"
+      team_name: "myawesome-team-name"
     materials:
       upstream:
         pipeline: myawesome-service-1-build-qa
@@ -202,5 +288,5 @@ pipelines:
         git: https://github.com/praks-1529/myawesome.git
         branch: verify
     stages:
-      - terraform-plan: *terraform-plan
+      # - terraform-plan: *terraform-plan
       - terraform-apply: *terraform-apply
